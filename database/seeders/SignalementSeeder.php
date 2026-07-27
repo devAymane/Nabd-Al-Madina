@@ -2,22 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Signalement;
 use Illuminate\Database\Seeder;
 
-class DatabaseSeeder extends Seeder
+class SignalementSeeder extends Seeder
 {
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
-        ]);
-
-        $this->call([
-            DepartementSeeder::class,
-            IncidentSeeder::class,
-            SignalementSeeder::class,
-        ]);
+        Signalement::factory(30)->create();
     }
 }
