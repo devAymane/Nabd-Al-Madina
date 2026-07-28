@@ -47,10 +47,15 @@ class SignalementPolicy
         return $user->role === 'agent';
     }
 
-
     /**
-     * Only citizen owner can delete
-     */
+ * Only agent can change signalement status
+ */
+public function updateStatus(User $user, Signalement $signalement): bool
+{
+    return $user->role === 'agent';
+}
+
+    
     public function delete(User $user, Signalement $signalement): bool
     {
         return $user->role === 'citizen'
