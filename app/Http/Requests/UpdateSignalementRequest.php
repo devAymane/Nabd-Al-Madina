@@ -20,12 +20,14 @@ class UpdateSignalementRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
-   public function rules(): array
+    public function rules(): array
     {
         return [
             'description' => [
                 'sometimes',
                 'string',
+                'min:10',
+                'max:1000',
             ],
 
             'latitude' => [
@@ -43,6 +45,7 @@ class UpdateSignalementRequest extends FormRequest
             'photo' => [
                 'sometimes',
                 'image',
+                'mimes:jpg,jpeg,png,webp',
                 'max:5120',
             ],
         ];
