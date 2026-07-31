@@ -1,14 +1,14 @@
 <?php
 
-namespace Database\Seeders;
+// namespace Database\Seeders;
 
-use App\Models\Incident;
-use Illuminate\Database\Seeder;
+// use App\Models\Incident;
+// use Illuminate\Database\Seeder;
 
-class IncidentSeeder extends Seeder
-{
-    public function run(): void
-    {
-        Incident::factory(10)->create();
-    }
-}
+// class IncidentSeeder extends Seeder
+// {
+//     public function run(): void
+//     {
+//         Incident::factory(10)->create();
+//     }
+// }

@@ -1,36 +1,21 @@
-<?php
-
-namespace App\Http\Controllers\Api;
-
-use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreSignalementRequest;
-use App\Http\Requests\UpdateSignalementRequest;
-use App\Http\Requests\UpdateSignalementStatusRequest;
-use App\Http\Resources\SignalementResource;
-use App\Models\Departement;
-use App\Models\Signalement;
-use App\Services\SignalementAnalyzer;
-use Illuminate\Support\Facades\Gate;
-
-class SignalementController extends Controller
+public function store(StoreSignalementRequest $request)
 {
-    public function store(StoreSignalementRequest $request)
-    {
-        $data = $request->validated();
+    $data = $request->validated();
 
-        $data['user_id'] = auth()->id();
-        $data['status'] = 'nouveau';
+    $data['user_id'] = auth()->id();
+    $data['status'] = 'nouveau';
 
-        // Upload photo
-        if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('signalements', 'public');
-        }
+    // Upload photo
+    if ($request->hasFile('photo')) {
+        $data['photo'] = $request->file('photo')->store('signalements', 'public');
+    }
 
-        // Analyse IA
+    // Analyse IA
+    try {
+
         $analyzer = app(SignalementAnalyzer::class);
         $response = $analyzer->analyze($data['description']);
 
-        // Convertir le JSON retourné par l'IA
         $json = str_replace(
             ['```json', '```'],
             '',
@@ -46,19 +31,23 @@ class SignalementController extends Controller
 
             // Priority
             $data['priority'] = match (strtolower($ai['priority'] ?? '')) {
-                'haute', 'high'   => 'high',
+                'haute', 'high' => 'high',
                 'moyenne', 'medium' => 'medium',
-                'basse', 'low'    => 'low',
-                default           => null,
+                'basse', 'low' => 'low',
+                default => null,
             };
 
             // Urgency
-            $data['urgency'] = match (strtolower($ai['urgency'] ?? '')) {
-                'haute', 'high'   => 3,
-                'moyenne', 'medium' => 2,
-                'basse', 'low'    => 1,
-                default           => null,
-            };
+            if (is_numeric($ai['urgency'] ?? null)) {
+                $data['urgency'] = (int) $ai['urgency'];
+            } else {
+                $data['urgency'] = match (strtolower($ai['urgency'] ?? '')) {
+                    'haute', 'high' => 5,
+                    'moyenne', 'medium' => 3,
+                    'basse', 'low' => 1,
+                    default => null,
+                };
+            }
 
             // Summary
             $data['summary'] = $ai['summary'] ?? null;
@@ -75,51 +64,25 @@ class SignalementController extends Controller
             }
         }
 
-        // Sauvegarder le signalement
-        $signalement = Signalement::create($data);
+    } catch (\Throwable $e) {
 
-        return new SignalementResource($signalement);
+        // Gestion des erreurs IA (timeout, SSL, mauvaise réponse...)
+
+        $data['category'] = 'Non classé';
+        $data['priority'] = 'medium';
+        $data['urgency'] = 3;
+        $data['summary'] = substr($data['description'], 0, 100);
+
+        $departement = Departement::firstOrCreate(
+            ['nom' => 'Voirie'],
+            ['description' => 'Département par défaut']
+        );
+
+        $data['departement_id'] = $departement->id;
     }
 
-    public function index()
-    {
-        $signalements = Signalement::where('user_id', auth()->id())
-            ->latest()
-            ->get();
+    // Sauvegarde
+    $signalement = Signalement::create($data);
 
-        return SignalementResource::collection($signalements);
-    }
-
-    public function show(Signalement $signalement)
-    {
-        if ($signalement->user_id !== auth()->id()) {
-            abort(403, "Vous n'êtes pas autorisé à consulter ce signalement.");
-        }
-
-        return new SignalementResource($signalement);
-    }
-
-    public function update(UpdateSignalementRequest $request, Signalement $signalement)
-    {
-        $data = $request->validated();
-
-        if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('signalements', 'public');
-        }
-
-        $signalement->update($data);
-
-        return new SignalementResource($signalement);
-    }
-
-    public function updateStatus(UpdateSignalementStatusRequest $request, Signalement $signalement)
-    {
-        Gate::authorize('updateStatus', $signalement);
-
-        $signalement->update([
-            'status' => $request->status,
-        ]);
-
-        return new SignalementResource($signalement);
-    }
+    return new SignalementResource($signalement);
 }

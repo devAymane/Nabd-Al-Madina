@@ -18,7 +18,7 @@ class SignalementFactory extends Factory
                 ? Incident::factory()
                 : null,
 
-            'departement_id' => Departement::factory(),
+            'departement_id' => Departement::inRandomOrder()->first()->id,
 
             'description' => fake()->paragraph(),
 
