@@ -50,6 +50,7 @@ class AuthController extends Controller
     }
 
 
+    
     // Logout
     public function logout()
     {
@@ -60,3 +61,4 @@ class AuthController extends Controller
         ]);
     }
 }
+

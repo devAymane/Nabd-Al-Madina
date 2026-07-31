@@ -22,3 +22,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/signalements/{signalement}/status', [SignalementController::class, 'updateStatus']);
 
 });
+
