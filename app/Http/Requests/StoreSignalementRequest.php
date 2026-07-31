@@ -20,31 +20,34 @@ class StoreSignalementRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
-   public function rules(): array
-{
-    return [
-        'description' => [
-            'required',
-            'string',
-        ],
+    public function rules(): array
+    {
+        return [
+            'description' => [
+                'required',
+                'string',
+                'min:10',
+                'max:1000',
+            ],
 
-        'latitude' => [
-            'required',
-            'numeric',
-            'between:-90,90',
-        ],
+            'latitude' => [
+                'required',
+                'numeric',
+                'between:-90,90',
+            ],
 
-        'longitude' => [
-            'required',
-            'numeric',
-            'between:-180,180',
-        ],
+            'longitude' => [
+                'required',
+                'numeric',
+                'between:-180,180',
+            ],
 
-        'photo' => [
-            'nullable',
-            'image',
-            'max:5120',
-        ],
-    ];
-}
+            'photo' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+            ],
+        ];
+    }
 }
